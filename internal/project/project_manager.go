@@ -1,0 +1,145 @@
+package project
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+
+	"network-log-formatter/internal/model"
+)
+
+// ProjectManager handles CRUD operations for project records.
+// Each project is persisted as an individual JSON file named {id}.json.
+type ProjectManager struct {
+	storagePath string
+}
+
+// NewProjectManager creates a new ProjectManager that stores projects in the given directory.
+// It creates the storage directory if it does not exist.
+func NewProjectManager(storagePath string) (*ProjectManager, error) {
+	if err := os.MkdirAll(storagePath, 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create storage directory: %w", err)
+	}
+	return &ProjectManager{storagePath: storagePath}, nil
+}
+
+// Create saves a new project as a JSON file named {id}.json.
+// Returns an error if a project with the same Name already exists.
+func (pm *ProjectManager) Create(project model.Project) error {
+	// Check name uniqueness
+	if project.Name != "" {
+		existing, _ := pm.List()
+		for _, p := range existing {
+			if p.Name == project.Name && p.ID != project.ID {
+				return fmt.Errorf("项目名称 %q 已存在", project.Name)
+			}
+		}
+	}
+
+	data, err := json.MarshalIndent(project, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal project: %w", err)
+	}
+	path := pm.filePath(project.ID)
+	return os.WriteFile(path, data, 0o644)
+}
+
+// List reads all project files and returns them sorted by CreatedAt descending.
+func (pm *ProjectManager) List() ([]model.Project, error) {
+	entries, err := os.ReadDir(pm.storagePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read storage directory: %w", err)
+	}
+
+	var projects []model.Project
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(pm.storagePath, entry.Name()))
+		if err != nil {
+			continue // skip unreadable files
+		}
+		var p model.Project
+		if err := json.Unmarshal(data, &p); err != nil {
+			continue // skip corrupted files
+		}
+		projects = append(projects, p)
+	}
+
+	sort.Slice(projects, func(i, j int) bool {
+		return projects[i].CreatedAt.After(projects[j].CreatedAt)
+	})
+
+	return projects, nil
+}
+
+// Get reads a single project by ID.
+func (pm *ProjectManager) Get(id string) (*model.Project, error) {
+	data, err := os.ReadFile(pm.filePath(id))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("project not found: %s", id)
+		}
+		return nil, fmt.Errorf("failed to read project: %w", err)
+	}
+
+	var p model.Project
+	if err := json.Unmarshal(data, &p); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal project: %w", err)
+	}
+	return &p, nil
+}
+
+// Update applies partial updates to an existing project using pointer fields.
+func (pm *ProjectManager) Update(id string, updates model.ProjectUpdate) error {
+	p, err := pm.Get(id)
+	if err != nil {
+		return err
+	}
+
+	if updates.Name != nil {
+		// Check name uniqueness
+		existing, _ := pm.List()
+		for _, ep := range existing {
+			if ep.Name == *updates.Name && ep.ID != id {
+				return fmt.Errorf("项目名称 %q 已存在", *updates.Name)
+			}
+		}
+		p.Name = *updates.Name
+	}
+	if updates.Code != nil {
+		p.Code = *updates.Code
+	}
+	if updates.Status != nil {
+		p.Status = *updates.Status
+	}
+	p.UpdatedAt = time.Now()
+
+	// Write directly to avoid re-checking uniqueness against self
+	data, jsonErr := json.MarshalIndent(*p, "", "  ")
+	if jsonErr != nil {
+		return fmt.Errorf("failed to marshal project: %w", jsonErr)
+	}
+	return os.WriteFile(pm.filePath(id), data, 0o644)
+}
+
+// Delete removes a project file by ID.
+func (pm *ProjectManager) Delete(id string) error {
+	path := pm.filePath(id)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("project not found: %s", id)
+	}
+	return os.Remove(path)
+}
+
+// filePath returns the full file path for a project by ID.
+// It validates the ID to prevent path traversal attacks.
+func (pm *ProjectManager) filePath(id string) string {
+	// Sanitize: only allow alphanumeric, hyphens, and underscores
+	clean := filepath.Base(id)
+	return filepath.Join(pm.storagePath, clean+".json")
+}

@@ -1,0 +1,25 @@
+# Build artifacts
+build/bin/
+
+# IDE / editor
+.vscode/
+.kiro/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
