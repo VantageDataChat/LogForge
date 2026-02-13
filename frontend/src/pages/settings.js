@@ -78,6 +78,9 @@ App.registerPage('settings', function(container) {
     const testResultEl = document.getElementById('llm-test-result');
     const wizardToggle = document.getElementById('show-wizard-toggle');
 
+    // Cache loaded settings so we can preserve fields not shown in the UI (e.g. uv_path)
+    let loadedSettings = null;
+
     // Load current settings
     (async () => {
         try {
@@ -104,9 +107,6 @@ App.registerPage('settings', function(container) {
             await window.go.main.App.SetShowWizard(wizardToggle.checked);
         } catch (_) { /* ignore */ }
     });
-
-    // Cache loaded settings so we can preserve fields not shown in the UI (e.g. uv_path)
-    let loadedSettings = null;
 
     function gatherSettings() {
         return {

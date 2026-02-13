@@ -65,7 +65,9 @@ func (pem *PythonEnvManager) EnsureEnv(ctx context.Context) error {
 func (pem *PythonEnvManager) RunScript(ctx context.Context, scriptPath string, args []string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, error) {
 	pythonBin := pem.pythonPath()
 
-	cmdArgs := append([]string{scriptPath}, args...)
+	cmdArgs := make([]string, 0, 1+len(args))
+	cmdArgs = append(cmdArgs, scriptPath)
+	cmdArgs = append(cmdArgs, args...)
 	cmd := exec.CommandContext(ctx, pythonBin, cmdArgs...)
 
 	stdout, err := cmd.StdoutPipe()

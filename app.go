@@ -134,7 +134,9 @@ func (a *App) AnalyzeSample(projectName string, sampleText string) (*model.Gener
 	// 2. Validate the generated code
 	var validationResult *agent.ValidationResult
 	if a.codeValidator != nil {
-		validationResult, err = a.codeValidator.Validate(a.ctx, code)
+		validateCtx, validateCancel := context.WithTimeout(a.ctx, 3*time.Minute)
+		defer validateCancel()
+		validationResult, err = a.codeValidator.Validate(validateCtx, code)
 		if err != nil {
 			return nil, fmt.Errorf("code validation failed: %w", err)
 		}
@@ -296,7 +298,11 @@ func (a *App) SaveSettings(settings model.Settings) error {
 		uvPath = "uv"
 	}
 	envPath := filepath.Join(a.configDir, "pyenv")
-	a.envManager = pyenv.NewPythonEnvManager(uvPath, envPath)
+	newEnvMgr := pyenv.NewPythonEnvManager(uvPath, envPath)
+
+	a.mu.Lock()
+	a.envManager = newEnvMgr
+	a.mu.Unlock()
 
 	// Reinitialize LLM components if configured
 	if settings.LLM.BaseURL != "" && settings.LLM.APIKey != "" && settings.LLM.ModelName != "" {

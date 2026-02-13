@@ -109,7 +109,7 @@ App.registerPage('projects', function(container) {
             html += '<td class="text-sm">' + time + '</td>';
             html += '<td class="text-sm">' + escapeHtml(name) + '</td>';
             html += '<td>' + statusBadge + '</td>';
-            html += '<td><button class="btn btn-default btn-sm view-btn" data-id="' + p.id + '">查看</button></td>';
+            html += '<td><button class="btn btn-default btn-sm view-btn" data-id="' + escapeHtml(p.id) + '">查看</button></td>';
             html += '</tr>';
         });
 

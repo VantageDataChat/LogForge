@@ -120,6 +120,7 @@ App.registerPage('batch', function(container) {
     });
 
     let pollTimer = null;
+    let lastLogMessage = '';
 
     // Clean up polling timer when navigating away from this page
     const originalNavigate = App.navigate.bind(App);
@@ -199,7 +200,10 @@ App.registerPage('batch', function(container) {
         const [label, cls] = statusMap[p.status] || [p.status, 'badge badge-info'];
         statusBadge.innerHTML = '<span class="' + cls + '">' + label + '</span>';
 
-        if (p.message) appendLog(p.message);
+        if (p.message && p.message !== lastLogMessage) {
+            appendLog(p.message);
+            lastLogMessage = p.message;
+        }
     }
 
     function showResult(p) {
