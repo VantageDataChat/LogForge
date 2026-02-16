@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"network-log-formatter/internal/model"
@@ -27,16 +29,12 @@ func NewProjectManager(storagePath string) (*ProjectManager, error) {
 }
 
 // Create saves a new project as a JSON file named {id}.json.
-// Returns an error if a project with the same Name already exists.
+// If a project with the same Name already exists, a numeric suffix is appended
+// (e.g. "name_2", "name_3") to ensure uniqueness.
 func (pm *ProjectManager) Create(project model.Project) error {
-	// Check name uniqueness
 	if project.Name != "" {
 		existing, _ := pm.List()
-		for _, p := range existing {
-			if p.Name == project.Name && p.ID != project.ID {
-				return fmt.Errorf("项目名称 %q 已存在", project.Name)
-			}
-		}
+		project.Name = pm.uniqueName(project.Name, project.ID, existing)
 	}
 
 	data, err := json.MarshalIndent(project, "", "  ")
@@ -102,14 +100,8 @@ func (pm *ProjectManager) Update(id string, updates model.ProjectUpdate) error {
 	}
 
 	if updates.Name != nil {
-		// Check name uniqueness
 		existing, _ := pm.List()
-		for _, ep := range existing {
-			if ep.Name == *updates.Name && ep.ID != id {
-				return fmt.Errorf("项目名称 %q 已存在", *updates.Name)
-			}
-		}
-		p.Name = *updates.Name
+		p.Name = pm.uniqueName(*updates.Name, id, existing)
 	}
 	if updates.Code != nil {
 		p.Code = *updates.Code
@@ -134,6 +126,41 @@ func (pm *ProjectManager) Delete(id string) error {
 		return fmt.Errorf("project not found: %s", id)
 	}
 	return os.Remove(path)
+}
+
+// uniqueName returns a name that does not conflict with any existing project.
+// If baseName is already taken, it appends _2, _3, etc. If baseName already
+// ends with a numeric suffix (e.g. "foo_3"), the counter starts from that number.
+func (pm *ProjectManager) uniqueName(baseName string, selfID string, projects []model.Project) string {
+	names := make(map[string]struct{})
+	for _, p := range projects {
+		if p.ID != selfID {
+			names[p.Name] = struct{}{}
+		}
+	}
+
+	if _, taken := names[baseName]; !taken {
+		return baseName
+	}
+
+	// Strip existing numeric suffix to find the root name.
+	re := regexp.MustCompile(`^(.+)_(\d+)$`)
+	root := baseName
+	start := 2
+	if m := re.FindStringSubmatch(baseName); m != nil {
+		root = m[1]
+		start, _ = strconv.Atoi(m[2])
+		if start < 2 {
+			start = 2
+		}
+	}
+
+	for i := start; ; i++ {
+		candidate := fmt.Sprintf("%s_%d", root, i)
+		if _, taken := names[candidate]; !taken {
+			return candidate
+		}
+	}
 }
 
 // filePath returns the full file path for a project by ID.

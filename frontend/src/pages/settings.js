@@ -62,7 +62,7 @@ App.registerPage('settings', function(container) {
             </div>
             <div class="form-group">
                 <label for="sample-lines">采样条数（浏览日志文件时取前几行作为样本）</label>
-                <input type="number" id="sample-lines" min="1" max="1000" placeholder="默认 20">
+                <input type="number" id="sample-lines" min="1" max="1000" placeholder="默认 5">
             </div>
             <label class="wizard-checkbox" style="margin-bottom:0">
                 <input type="checkbox" id="show-wizard-toggle">
@@ -96,7 +96,7 @@ App.registerPage('settings', function(container) {
             fields.model.value = s.llm.model_name || '';
             fields.inputDir.value = s.default_input_dir || '';
             fields.outputDir.value = s.default_output_dir || '';
-            fields.sampleLines.value = s.sample_lines || 20;
+            fields.sampleLines.value = s.sample_lines || 5;
         } catch (err) {
             msgEl.innerHTML = '<div class="alert alert-error">加载设置失败: ' + escapeHtml(String(err)) + '</div>';
         }
@@ -124,7 +124,7 @@ App.registerPage('settings', function(container) {
             uv_path: (loadedSettings && loadedSettings.uv_path) ? loadedSettings.uv_path : 'uv',
             default_input_dir: fields.inputDir.value.trim(),
             default_output_dir: fields.outputDir.value.trim(),
-            sample_lines: parseInt(fields.sampleLines.value, 10) || 20,
+            sample_lines: parseInt(fields.sampleLines.value, 10) || 5,
         };
     }
 

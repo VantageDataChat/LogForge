@@ -17,7 +17,7 @@ export function GetEnvStatus():Promise<pyenv.EnvStatus>;
 
 export function GetProject(arg1:string):Promise<model.Project>;
 
-export function GetPythonEnvReady():Promise<{[key: string]: any}>;
+export function GetPythonEnvReady():Promise<Record<string, any>>;
 
 export function GetSettings():Promise<model.Settings>;
 
