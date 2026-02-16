@@ -1,5 +1,8 @@
 # LogForge — 智能网络日志格式化系统
 
+<img width="1044" height="695" alt="image" src="https://github.com/user-attachments/assets/873cc306-6768-4f87-8d4f-5fce3472487b" />
+
+
 LogForge 是一款基于 LLM（大语言模型）的桌面应用，能够自动分析网络日志样本、生成 Python 解析代码，并批量处理日志文件导出为 Excel。
 
 ## 功能特性
