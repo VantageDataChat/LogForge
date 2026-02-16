@@ -17,7 +17,6 @@ type Settings struct {
 	DefaultInputDir  string    `json:"default_input_dir"`
 	DefaultOutputDir string    `json:"default_output_dir"`
 	SampleLines      int       `json:"sample_lines,omitempty"`
-	SampleLines      int       `json:"sample_lines,omitempty"`
 	ShowWizard       *bool     `json:"show_wizard,omitempty"`
 }
 

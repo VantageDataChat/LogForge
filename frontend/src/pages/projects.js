@@ -162,7 +162,7 @@ App.registerPage('projects', function(container) {
 
     document.getElementById('rerun-btn').addEventListener('click', () => {
         if (!currentProjectId) return;
-        App.navigate('batch', { projectId: currentProjectId });
+        App.pageParams = { projectId: currentProjectId };
         window.location.hash = 'batch';
     });
 
