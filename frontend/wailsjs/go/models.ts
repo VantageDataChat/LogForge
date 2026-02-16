@@ -125,6 +125,7 @@ export namespace model {
 	    default_output_dir: string;
 	    sample_lines?: number;
 	    show_wizard?: boolean;
+	    language?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -138,6 +139,7 @@ export namespace model {
 	        this.default_output_dir = source["default_output_dir"];
 	        this.sample_lines = source["sample_lines"];
 	        this.show_wizard = source["show_wizard"];
+	        this.language = source["language"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -29,9 +29,9 @@ export function ListProjects():Promise<Array<model.Project>>;
 
 export function OpenDirectory(arg1:string):Promise<void>;
 
-export function RerunProject(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function RerunProject(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
 
-export function RunBatch(arg1:string,arg2:string,arg3:string):Promise<void>;
+export function RunBatch(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
 
 export function SaveSettings(arg1:model.Settings):Promise<void>;
 

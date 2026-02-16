@@ -54,12 +54,12 @@ export function OpenDirectory(arg1) {
   return window['go']['main']['App']['OpenDirectory'](arg1);
 }
 
-export function RerunProject(arg1, arg2, arg3) {
-  return window['go']['main']['App']['RerunProject'](arg1, arg2, arg3);
+export function RerunProject(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['RerunProject'](arg1, arg2, arg3, arg4);
 }
 
-export function RunBatch(arg1, arg2, arg3) {
-  return window['go']['main']['App']['RunBatch'](arg1, arg2, arg3);
+export function RunBatch(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['RunBatch'](arg1, arg2, arg3, arg4);
 }
 
 export function SaveSettings(arg1) {
