@@ -41,7 +41,12 @@ func (sa *SampleAnalyzer) Analyze(ctx context.Context, sampleText string) (strin
 		return "", err
 	}
 
-	return extractCode(resp), nil
+	code := extractCode(resp)
+	if code == "" {
+		return "", errors.New("LLM response did not contain valid Python code")
+	}
+
+	return code, nil
 }
 
 const systemPrompt = `You are an expert Python developer specializing in log parsing and data processing.
@@ -72,7 +77,7 @@ func buildUserPrompt(sampleText string) string {
 
 // extractCode extracts Python code from an LLM response.
 // It first looks for a ```python ... ``` block, then any ``` ... ``` block.
-// Returns an error-indicating empty string if no code block is found.
+// Falls back to the raw response only if it looks like Python code.
 func extractCode(response string) string {
 	// Try to find ```python ... ``` block
 	if code, ok := extractFencedBlock(response, "```python"); ok {
@@ -85,13 +90,16 @@ func extractCode(response string) string {
 	}
 
 	// No code block found — return trimmed response only if it looks like Python code
-	// (contains common Python keywords), otherwise return as-is and let the validator catch it
 	trimmed := strings.TrimSpace(response)
-	if strings.Contains(trimmed, "import ") || strings.Contains(trimmed, "def ") || strings.Contains(trimmed, "class ") {
+	if strings.Contains(trimmed, "import ") || strings.Contains(trimmed, "def ") ||
+		strings.Contains(trimmed, "class ") || strings.Contains(trimmed, "print(") ||
+		strings.Contains(trimmed, "if __name__") {
 		return trimmed
 	}
 
-	return trimmed
+	// Doesn't look like Python code at all — return empty string so the caller
+	// can detect the failure via validation rather than executing arbitrary text
+	return ""
 }
 
 // extractFencedBlock finds the first occurrence of a fenced code block starting

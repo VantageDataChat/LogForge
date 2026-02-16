@@ -51,12 +51,17 @@ func (pem *PythonEnvManager) EnsureEnv(ctx context.Context) error {
 		}
 	}
 
-	// 3. Install dependencies
-	cmd := exec.CommandContext(ctx, pem.uvPath, "pip", "install", "openpyxl", "--python", pem.pythonPath())
-	hideWindow(cmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to install dependencies: %w\n%s", err, string(output))
+	// 3. Install dependencies (only if not already installed)
+	pythonBin := pem.pythonPath()
+	checkCmd := exec.CommandContext(ctx, pythonBin, "-c", "import openpyxl")
+	hideWindow(checkCmd)
+	if checkCmd.Run() != nil {
+		cmd := exec.CommandContext(ctx, pem.uvPath, "pip", "install", "openpyxl", "--python", pythonBin)
+		hideWindow(cmd)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to install dependencies: %w\n%s", err, string(output))
+		}
 	}
 
 	return nil
@@ -80,10 +85,13 @@ func (pem *PythonEnvManager) RunScript(ctx context.Context, scriptPath string, a
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
+		stdout.Close()
 		return nil, nil, nil, fmt.Errorf("failed to create stderr pipe: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
+		stdout.Close()
+		stderr.Close()
 		return nil, nil, nil, fmt.Errorf("failed to start python script: %w", err)
 	}
 

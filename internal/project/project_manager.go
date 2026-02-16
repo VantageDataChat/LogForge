@@ -166,7 +166,11 @@ func (pm *ProjectManager) uniqueName(baseName string, selfID string, projects []
 // filePath returns the full file path for a project by ID.
 // It validates the ID to prevent path traversal attacks.
 func (pm *ProjectManager) filePath(id string) string {
-	// Sanitize: only allow alphanumeric, hyphens, and underscores
+	// Sanitize: use filepath.Base to strip directory components,
+	// then reject any result that is empty, ".", or ".."
 	clean := filepath.Base(id)
+	if clean == "." || clean == ".." || clean == "" {
+		clean = "_invalid_"
+	}
 	return filepath.Join(pm.storagePath, clean+".json")
 }

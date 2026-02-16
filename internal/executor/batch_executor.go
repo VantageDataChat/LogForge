@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"network-log-formatter/internal/model"
 	"network-log-formatter/internal/pyenv"
@@ -47,7 +48,7 @@ func NewBatchExecutor(envManager *pyenv.PythonEnvManager, llmClient LLMRepairer,
 // results to the output directory. It monitors stdout for JSON progress lines
 // and stderr for errors. If a runtime error occurs, it sends the code and error
 // to the LLM for repair and retries up to maxRetries times.
-func (be *BatchExecutor) Execute(ctx context.Context, code string, inputDir string, outputDir string) (*model.BatchResult, error) {
+func (be *BatchExecutor) Execute(ctx context.Context, code string, inputDir string, outputDir string, outputFileName string) (*model.BatchResult, error) {
 	// Validate directories
 	if strings.TrimSpace(inputDir) == "" {
 		return nil, fmt.Errorf("input directory must not be empty")
@@ -82,7 +83,7 @@ func (be *BatchExecutor) Execute(ctx context.Context, code string, inputDir stri
 	var lastErr string
 
 	for attempt := 0; attempt <= be.maxRetries; attempt++ {
-		result, stderrOutput, err := be.runScript(ctx, currentCode, inputDir, outputDir)
+		result, stderrOutput, err := be.runScript(ctx, currentCode, inputDir, outputDir, outputFileName)
 		if err == nil {
 			// Process exited successfully (exit code 0).
 			// stderr may contain informational messages — that's fine.
@@ -121,7 +122,9 @@ func (be *BatchExecutor) Execute(ctx context.Context, code string, inputDir stri
 			break
 		}
 
-		fixedCode, repairErr := be.llmClient.RepairCode(ctx, currentCode, lastErr)
+		repairCtx, repairCancel := context.WithTimeout(ctx, 2*time.Minute)
+		fixedCode, repairErr := be.llmClient.RepairCode(repairCtx, currentCode, lastErr)
+		repairCancel()
 		if repairErr != nil {
 			// Can't repair, return the original error
 			break
@@ -142,7 +145,7 @@ func (be *BatchExecutor) Execute(ctx context.Context, code string, inputDir stri
 
 // runScript writes the code to a temp file, executes it via PythonEnvManager,
 // and reads stdout/stderr concurrently. Returns the batch result and any stderr output.
-func (be *BatchExecutor) runScript(ctx context.Context, code string, inputDir string, outputDir string) (*model.BatchResult, string, error) {
+func (be *BatchExecutor) runScript(ctx context.Context, code string, inputDir string, outputDir string, outputFileName string) (*model.BatchResult, string, error) {
 	// Write code to temp file
 	tmpDir, err := os.MkdirTemp("", "batch-executor-*")
 	if err != nil {
@@ -160,8 +163,11 @@ func (be *BatchExecutor) runScript(ctx context.Context, code string, inputDir st
 		Message: "Starting batch processing",
 	})
 
-	// Run script with --input and --output args
+	// Run script with --input, --output, and --output-name args
 	args := []string{"--input", inputDir, "--output", outputDir}
+	if outputFileName != "" {
+		args = append(args, "--output-name", outputFileName)
+	}
 	cmd, stdout, stderr, err := be.envManager.RunScript(ctx, scriptPath, args)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to start script: %w", err)

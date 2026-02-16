@@ -127,20 +127,19 @@ App.registerPage('batch', function(container) {
     let pollTimer = null;
     let lastLogMessage = '';
 
-    // Clean up polling timer when navigating away from this page
-    const originalNavigate = App.navigate.bind(App);
-    const cleanupPolling = () => {
+    // Clean up polling timer when navigating away from this page.
+    // Use a hashchange listener that auto-removes itself.
+    function cleanupPolling() {
         if (pollTimer) {
             clearInterval(pollTimer);
             pollTimer = null;
         }
-    };
-    // Override navigate temporarily to clean up on page change
-    App.navigate = function(page) {
+    }
+    function onHashChange() {
         cleanupPolling();
-        App.navigate = originalNavigate;
-        originalNavigate(page);
-    };
+        window.removeEventListener('hashchange', onHashChange);
+    }
+    window.addEventListener('hashchange', onHashChange);
 
     startBtn.addEventListener('click', async () => {
         const projectId = projectSelect.value;

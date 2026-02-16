@@ -185,7 +185,7 @@ func (a *App) AnalyzeSample(projectName string, sampleText string) (*model.Gener
 }
 
 // RunBatch starts batch processing in a background goroutine so it doesn't block the UI.
-func (a *App) RunBatch(projectID string, inputDir string, outputDir string) error {
+func (a *App) RunBatch(projectID string, inputDir string, outputDir string, outputFileName string) error {
 	if a.batchExecutor == nil {
 		return fmt.Errorf("LLM is not configured. Please configure LLM settings first")
 	}
@@ -210,7 +210,7 @@ func (a *App) RunBatch(projectID string, inputDir string, outputDir string) erro
 	}
 
 	go func() {
-		_, execErr := a.batchExecutor.Execute(a.ctx, p.Code, inputDir, outputDir)
+		_, execErr := a.batchExecutor.Execute(a.ctx, p.Code, inputDir, outputDir, outputFileName)
 
 		// Update project status based on result
 		status := "executed"
@@ -270,7 +270,7 @@ func (a *App) RerunProject(id string, inputDir string, outputDir string) error {
 }
 
 // BrowseLogFile opens a file picker for log files, reads the first N lines
-// (configured by SampleLines setting, default 20), and returns the sample text
+// (configured by SampleLines setting, default 5), and returns the sample text
 // along with a project name derived from the file name (without extension).
 func (a *App) BrowseLogFile() (*model.LogFileSample, error) {
 	filePath, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
@@ -288,7 +288,7 @@ func (a *App) BrowseLogFile() (*model.LogFileSample, error) {
 	}
 
 	// Determine sample lines from settings
-	sampleLines := 20
+	sampleLines := 5
 	if settings, err := a.settingsManager.Load(); err == nil && settings.SampleLines > 0 {
 		sampleLines = settings.SampleLines
 	}
@@ -302,6 +302,7 @@ func (a *App) BrowseLogFile() (*model.LogFileSample, error) {
 
 	var lines []string
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // support long log lines up to 1MB
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 		if len(lines) >= sampleLines {
@@ -370,7 +371,24 @@ func (a *App) SaveSettings(settings model.Settings) error {
 
 	a.mu.Lock()
 	a.envManager = newEnvMgr
+	// Reset pyenv status so it can be re-initialized
+	a.pyenvReady = false
+	a.pyenvError = ""
 	a.mu.Unlock()
+
+	// Re-initialize Python environment in background
+	go func() {
+		if err := newEnvMgr.EnsureEnv(a.ctx); err != nil {
+			a.mu.Lock()
+			a.pyenvError = err.Error()
+			a.mu.Unlock()
+			fmt.Printf("warning: python env re-init failed: %v\n", err)
+		} else {
+			a.mu.Lock()
+			a.pyenvReady = true
+			a.mu.Unlock()
+		}
+	}()
 
 	// Reinitialize LLM components if configured
 	if settings.LLM.BaseURL != "" && settings.LLM.APIKey != "" && settings.LLM.ModelName != "" {
