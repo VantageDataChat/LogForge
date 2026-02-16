@@ -29,6 +29,10 @@ App.registerPage('batch', function(container) {
                     <button class="btn btn-default btn-sm" id="browse-output-btn">浏览...</button>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="batch-output-name">输出文件名（不含 .xlsx 后缀）</label>
+                <input type="text" id="batch-output-name" placeholder="默认使用项目名称">
+            </div>
             <button id="batch-start-btn" class="btn btn-primary">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 开始处理
@@ -70,6 +74,7 @@ App.registerPage('batch', function(container) {
     const projectSelect = document.getElementById('batch-project');
     const inputDirInput = document.getElementById('batch-input-dir');
     const outputDirInput = document.getElementById('batch-output-dir');
+    const outputNameInput = document.getElementById('batch-output-name');
     const progressSection = document.getElementById('batch-progress-section');
     const resultSection = document.getElementById('batch-result-section');
     const progressBar = document.getElementById('batch-progress-bar');
@@ -80,6 +85,7 @@ App.registerPage('batch', function(container) {
     const resultContent = document.getElementById('batch-result-content');
 
     // Load projects into dropdown
+    let projectsMap = {};
     (async () => {
         try {
             const projects = await window.go.main.App.ListProjects();
@@ -87,18 +93,30 @@ App.registerPage('batch', function(container) {
             if (projects && projects.length > 0) {
                 projects.forEach(p => {
                     const label = p.name || p.id.substring(0, 8);
+                    projectsMap[p.id] = label;
                     projectSelect.innerHTML += '<option value="' + p.id + '">' + escapeHtml(label) + '</option>';
                 });
             }
             // Auto-select project if navigated from project management
             if (App.pageParams && App.pageParams.projectId) {
                 projectSelect.value = App.pageParams.projectId;
+                // Auto-fill output name from pageParams or project name
+                const name = App.pageParams.projectName || projectsMap[App.pageParams.projectId] || '';
+                if (name) outputNameInput.value = name;
                 App.pageParams = null;
             }
         } catch (_) {
             projectSelect.innerHTML = '<option value="">加载项目失败</option>';
         }
     })();
+
+    // Auto-fill output name when project selection changes
+    projectSelect.addEventListener('change', () => {
+        const id = projectSelect.value;
+        if (id && projectsMap[id] && !outputNameInput.value.trim()) {
+            outputNameInput.value = projectsMap[id];
+        }
+    });
 
     // Load default dirs
     (async () => {
@@ -145,10 +163,11 @@ App.registerPage('batch', function(container) {
         const projectId = projectSelect.value;
         const inputDir = inputDirInput.value.trim();
         const outputDir = outputDirInput.value.trim();
+        const outputName = outputNameInput.value.trim() || (projectsMap[projectId] || '');
 
-        if (!projectId) { alert('请选择项目'); return; }
-        if (!inputDir) { alert('请选择输入目录'); return; }
-        if (!outputDir) { alert('请选择输出目录'); return; }
+        if (!projectId) { showAlert('请选择项目'); return; }
+        if (!inputDir) { showAlert('请选择输入目录'); return; }
+        if (!outputDir) { showAlert('请选择输出目录'); return; }
 
         startBtn.disabled = true;
         progressSection.style.display = 'block';
@@ -158,7 +177,7 @@ App.registerPage('batch', function(container) {
         progressText.textContent = '0%';
 
         try {
-            await window.go.main.App.RunBatch(projectId, inputDir, outputDir);
+            await window.go.main.App.RunBatch(projectId, inputDir, outputDir, outputName);
             appendLog('批处理已启动...');
             startPolling();
         } catch (err) {
@@ -241,7 +260,7 @@ App.registerPage('batch', function(container) {
                 try {
                     await window.go.main.App.OpenDirectory(outputDirInput.value.trim());
                 } catch (err) {
-                    alert('打开目录失败: ' + err);
+                    showError('打开目录失败: ' + err);
                 }
             });
         }

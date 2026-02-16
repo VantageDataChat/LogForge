@@ -41,7 +41,7 @@ func TestProperty5_BatchDirectoryRequiredValidation(t *testing.T) {
 		// Create executor with nil dependencies — validation should fail before they're used
 		be := NewBatchExecutor(nil, nil, 3)
 
-		_, err := be.Execute(context.Background(), "print('hello')", inputDir, outputDir)
+		_, err := be.Execute(context.Background(), "print('hello')", inputDir, outputDir, "")
 
 		// Property: must return an error when at least one directory is empty/whitespace
 		if err == nil {
@@ -56,7 +56,7 @@ func TestProperty5_BatchDirectoryRequiredValidation(t *testing.T) {
 // Unit test: both directories empty
 func TestExecute_BothDirsEmpty(t *testing.T) {
 	be := NewBatchExecutor(nil, nil, 3)
-	_, err := be.Execute(context.Background(), "print('hello')", "", "")
+	_, err := be.Execute(context.Background(), "print('hello')", "", "", "")
 	if err == nil {
 		t.Fatal("expected error when both directories are empty")
 	}
@@ -65,7 +65,7 @@ func TestExecute_BothDirsEmpty(t *testing.T) {
 // Unit test: only inputDir empty
 func TestExecute_InputDirEmpty(t *testing.T) {
 	be := NewBatchExecutor(nil, nil, 3)
-	_, err := be.Execute(context.Background(), "print('hello')", "", "/tmp/output")
+	_, err := be.Execute(context.Background(), "print('hello')", "", "/tmp/output", "")
 	if err == nil {
 		t.Fatal("expected error when inputDir is empty")
 	}
@@ -82,7 +82,7 @@ func TestExecute_OutputDirEmpty(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	_, execErr := be.Execute(context.Background(), "print('hello')", tmpDir, "")
+	_, execErr := be.Execute(context.Background(), "print('hello')", tmpDir, "", "")
 	if execErr == nil {
 		t.Fatal("expected error when outputDir is empty")
 	}
@@ -91,7 +91,7 @@ func TestExecute_OutputDirEmpty(t *testing.T) {
 // Unit test: non-existent inputDir
 func TestExecute_NonExistentInputDir(t *testing.T) {
 	be := NewBatchExecutor(nil, nil, 3)
-	_, err := be.Execute(context.Background(), "print('hello')", "/nonexistent/path/abc123", "/tmp/output")
+	_, err := be.Execute(context.Background(), "print('hello')", "/nonexistent/path/abc123", "/tmp/output", "")
 	if err == nil {
 		t.Fatal("expected error when inputDir does not exist")
 	}

@@ -18,6 +18,7 @@ type Settings struct {
 	DefaultOutputDir string    `json:"default_output_dir"`
 	SampleLines      int       `json:"sample_lines,omitempty"`
 	ShowWizard       *bool     `json:"show_wizard,omitempty"`
+	Language         string    `json:"language,omitempty"` // "zh-CN" or "en"
 }
 
 

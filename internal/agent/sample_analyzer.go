@@ -53,10 +53,10 @@ const systemPrompt = `You are an expert Python developer specializing in log par
 Your task is to analyze sample log entries and generate a complete Python program that can batch-process log files of the same format.
 
 The generated Python program MUST:
-1. Accept --input and --output command line arguments (--input is the directory containing log files, --output is the directory for Excel output)
+1. Accept --input, --output, and --output-name command line arguments (--input is the directory containing log files, --output is the directory for Excel output, --output-name is the Excel file name without extension, defaulting to "result" if not provided)
 2. Traverse all log files in the input directory
 3. Parse each log entry into structured data based on the detected format
-4. Use openpyxl to write ALL parsed data into a SINGLE Excel file (e.g. output/result.xlsx), but create a SEPARATE SHEET for each input log file. The sheet name MUST be the original log file name WITH extension (e.g. "Apache_2k.log"). If the file name exceeds 31 characters (Excel sheet name limit), truncate it to 31 characters. Do NOT use generic names like "Log Entries" or "Sheet1". Do NOT merge all data into one worksheet.
+4. Use openpyxl to write ALL parsed data into a SINGLE Excel file named {output-name}.xlsx in the output directory, but create a SEPARATE SHEET for each input log file. The sheet name MUST be the original log file name WITH extension (e.g. "Apache_2k.log"). If the file name exceeds 31 characters (Excel sheet name limit), truncate it to 31 characters. Do NOT use generic names like "Log Entries" or "Sheet1". Do NOT merge all data into one worksheet.
    IMPORTANT: Each log file must produce exactly ONE sheet. Do NOT create duplicate sheets. When creating the Workbook, immediately remove the default empty sheet (wb.remove(wb.active)) before adding any data sheets. Ensure each file is only processed once.
 5. STRICTLY FORBIDDEN extra columns:
    - Do NOT add a "source_file" column. The sheet name already identifies the source file.

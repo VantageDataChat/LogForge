@@ -6,6 +6,77 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ---- Custom Dialog System ----
+
+function _showDialog(type, message, options = {}) {
+    return new Promise((resolve) => {
+        const icons = {
+            warning: '⚠️',
+            error: '❌',
+            info: 'ℹ️',
+            confirm: '❓',
+        };
+        const titleKeys = {
+            warning: 'dialog.warning',
+            error: 'dialog.error',
+            info: 'dialog.info',
+            confirm: 'dialog.confirm',
+        };
+        const title = options.title || I18n.t(titleKeys[type] || 'dialog.info');
+        const icon = icons[type] || 'ℹ️';
+        const isConfirm = type === 'confirm';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay';
+        overlay.innerHTML = `
+            <div class="dialog-box">
+                <div class="dialog-body">
+                    <div class="dialog-icon dialog-icon-${type}">${icon}</div>
+                    <div class="dialog-content">
+                        <div class="dialog-title">${escapeHtml(title)}</div>
+                        <div class="dialog-message">${escapeHtml(message)}</div>
+                    </div>
+                </div>
+                <div class="dialog-footer">
+                    ${isConfirm ? '<button class="btn btn-default btn-sm dialog-cancel-btn">' + I18n.t('common.cancel') + '</button>' : ''}
+                    <button class="btn btn-primary btn-sm dialog-ok-btn">${isConfirm ? I18n.t('common.confirm') : I18n.t('common.ok')}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        function close(result) {
+            overlay.classList.add('dialog-fade-out');
+            setTimeout(() => overlay.remove(), 200);
+            resolve(result);
+        }
+
+        overlay.querySelector('.dialog-ok-btn').addEventListener('click', () => close(true));
+        const cancelBtn = overlay.querySelector('.dialog-cancel-btn');
+        if (cancelBtn) cancelBtn.addEventListener('click', () => close(false));
+
+        // Click backdrop to dismiss (cancel for confirm, ok for alert)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close(isConfirm ? false : true);
+        });
+
+        // Focus the OK button for keyboard accessibility
+        overlay.querySelector('.dialog-ok-btn').focus();
+    });
+}
+
+function showAlert(message, options) {
+    return _showDialog('warning', message, options);
+}
+
+function showError(message, options) {
+    return _showDialog('error', message, options);
+}
+
+function showConfirm(message, options) {
+    return _showDialog('confirm', message, options);
+}
+
 const App = {
     pages: {},
     currentPage: null,
@@ -122,45 +193,45 @@ const App = {
             <div class="wizard-dialog">
                 <div class="wizard-header">
                     <span class="wizard-logo">🚀</span>
-                    <h2>欢迎使用 LogForge</h2>
-                    <p class="text-muted">智能网络日志格式化系统</p>
+                    <h2 data-i18n="wizard.welcome">${I18n.t('wizard.welcome')}</h2>
+                    <p class="text-muted" data-i18n="wizard.subtitle">${I18n.t('wizard.subtitle')}</p>
                 </div>
                 <div class="wizard-steps">
                     <div class="wizard-step">
                         <span class="wizard-step-num">1</span>
                         <div>
-                            <div class="wizard-step-title">样本分析</div>
-                            <div class="wizard-step-desc">粘贴一段日志样本，AI 将自动生成 Python 解析代码</div>
+                            <div class="wizard-step-title" data-i18n="wizard.step1_title">${I18n.t('wizard.step1_title')}</div>
+                            <div class="wizard-step-desc" data-i18n="wizard.step1_desc">${I18n.t('wizard.step1_desc')}</div>
                         </div>
                     </div>
                     <div class="wizard-step">
                         <span class="wizard-step-num">2</span>
                         <div>
-                            <div class="wizard-step-title">代码验证</div>
-                            <div class="wizard-step-desc">系统自动验证生成的代码，确保可以正确运行</div>
+                            <div class="wizard-step-title" data-i18n="wizard.step2_title">${I18n.t('wizard.step2_title')}</div>
+                            <div class="wizard-step-desc" data-i18n="wizard.step2_desc">${I18n.t('wizard.step2_desc')}</div>
                         </div>
                     </div>
                     <div class="wizard-step">
                         <span class="wizard-step-num">3</span>
                         <div>
-                            <div class="wizard-step-title">批量处理</div>
-                            <div class="wizard-step-desc">选择输入目录，一键批量处理所有日志文件并导出 Excel</div>
+                            <div class="wizard-step-title" data-i18n="wizard.step3_title">${I18n.t('wizard.step3_title')}</div>
+                            <div class="wizard-step-desc" data-i18n="wizard.step3_desc">${I18n.t('wizard.step3_desc')}</div>
                         </div>
                     </div>
                     <div class="wizard-step">
                         <span class="wizard-step-num">4</span>
                         <div>
-                            <div class="wizard-step-title">项目管理</div>
-                            <div class="wizard-step-desc">历史项目可随时查看、编辑代码或重新执行</div>
+                            <div class="wizard-step-title" data-i18n="wizard.step4_title">${I18n.t('wizard.step4_title')}</div>
+                            <div class="wizard-step-desc" data-i18n="wizard.step4_desc">${I18n.t('wizard.step4_desc')}</div>
                         </div>
                     </div>
                 </div>
                 <div class="wizard-footer">
                     <label class="wizard-checkbox">
                         <input type="checkbox" id="wizard-dont-show">
-                        <span>不再显示此向导</span>
+                        <span data-i18n="wizard.dont_show">${I18n.t('wizard.dont_show')}</span>
                     </label>
-                    <button class="btn btn-primary" id="wizard-close-btn">开始使用</button>
+                    <button class="btn btn-primary" id="wizard-close-btn" data-i18n="wizard.start">${I18n.t('wizard.start')}</button>
                 </div>
             </div>
         `;
@@ -183,12 +254,12 @@ const App = {
     },
 
     async pollPythonEnvStatus() {
-        this.updateEnvIndicator('pending', 'Python 环境初始化中...');
+        this.updateEnvIndicator('pending', I18n.t('env.initializing'));
 
         const banner = document.createElement('div');
         banner.id = 'pyenv-banner';
         banner.className = 'alert alert-info';
-        banner.innerHTML = '<span class="spinner"></span> 正在自动初始化 Python 环境...';
+        banner.innerHTML = '<span class="spinner"></span> ' + I18n.t('env.init_banner');
         document.body.appendChild(banner);
 
         const maxAttempts = 60;
@@ -197,15 +268,15 @@ const App = {
                 const status = await window.go.main.App.GetPythonEnvReady();
                 if (status.ready) {
                     banner.className = 'alert alert-success';
-                    banner.innerHTML = '✅ Python 环境已就绪';
-                    this.updateEnvIndicator('ready', 'Python 环境就绪');
+                    banner.innerHTML = I18n.t('env.init_success');
+                    this.updateEnvIndicator('ready', I18n.t('env.ready'));
                     setTimeout(() => banner.remove(), 3000);
                     return;
                 }
                 if (status.error) {
                     banner.className = 'alert alert-error';
-                    banner.innerHTML = '❌ 环境初始化失败: ' + escapeHtml(status.error);
-                    this.updateEnvIndicator('error', '环境异常');
+                    banner.innerHTML = I18n.t('env.init_failed') + ': ' + escapeHtml(status.error);
+                    this.updateEnvIndicator('error', I18n.t('env.error'));
                     setTimeout(() => banner.remove(), 8000);
                     return;
                 }
@@ -213,8 +284,8 @@ const App = {
             await new Promise(r => setTimeout(r, 1000));
         }
         banner.className = 'alert alert-warning';
-        banner.innerHTML = '⏱ 环境初始化超时，请在设置中手动初始化';
-        this.updateEnvIndicator('error', '初始化超时');
+        banner.innerHTML = I18n.t('env.init_timeout');
+        this.updateEnvIndicator('error', I18n.t('env.timeout'));
         setTimeout(() => banner.remove(), 8000);
     }
 };

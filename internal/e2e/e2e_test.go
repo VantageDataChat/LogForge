@@ -248,7 +248,7 @@ func TestE2E_FullPipeline(t *testing.T) {
 	t.Log("Step 5: Running batch execution")
 	be := executor.NewBatchExecutor(envMgr, nil, 3)
 
-	result, err := be.Execute(ctx, code, inputDir, outputDir)
+	result, err := be.Execute(ctx, code, inputDir, outputDir, "")
 	if err != nil {
 		t.Fatalf("batch execution failed: %v", err)
 	}
@@ -383,7 +383,7 @@ another invalid line here
 	}
 
 	be := executor.NewBatchExecutor(envMgr, nil, 3)
-	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir)
+	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir, "")
 	if err != nil {
 		t.Fatalf("batch execution failed: %v", err)
 	}
@@ -433,7 +433,7 @@ func TestE2E_EmptyInputDirectory(t *testing.T) {
 	}
 
 	be := executor.NewBatchExecutor(envMgr, nil, 3)
-	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir)
+	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir, "")
 	if err != nil {
 		t.Fatalf("batch execution failed with empty dir: %v", err)
 	}
@@ -494,7 +494,7 @@ func TestE2E_LargeLogFile(t *testing.T) {
 
 	start := time.Now()
 	be := executor.NewBatchExecutor(envMgr, nil, 3)
-	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir)
+	result, err := be.Execute(ctx, pythonScript(), inputDir, outputDir, "")
 	elapsed := time.Since(start)
 
 	if err != nil {
@@ -690,7 +690,7 @@ func TestE2E_RealLLM_FullPipeline(t *testing.T) {
 	repairer := &testLLMRepairer{llmClient: llmClient}
 	be := executor.NewBatchExecutor(envMgr, repairer, 3)
 
-	result, err := be.Execute(ctx, finalCode, inputDir, outputDir)
+	result, err := be.Execute(ctx, finalCode, inputDir, outputDir, "")
 	if err != nil {
 		t.Logf("  ⚠ Batch execution error: %v", err)
 		t.Logf("  Generated code was:\n%s", finalCode)

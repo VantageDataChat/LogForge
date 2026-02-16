@@ -64,6 +64,10 @@ App.registerPage('projects', function(container) {
                             <button class="btn btn-default btn-sm" id="browse-rerun-output-btn">浏览...</button>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="rerun-output-name">输出文件名（不含 .xlsx 后缀）</label>
+                        <input type="text" id="rerun-output-name" placeholder="默认使用项目名称">
+                    </div>
                     <button class="btn btn-primary btn-sm" id="confirm-rerun-btn">确认运行</button>
                 </div>
             </div>
@@ -133,11 +137,12 @@ App.registerPage('projects', function(container) {
             document.getElementById('detail-code').value = p.code || '';
             document.getElementById('detail-message').innerHTML = '';
             document.getElementById('rerun-section').style.display = 'none';
+            document.getElementById('rerun-output-name').value = p.name || '';
 
             listSection.style.display = 'none';
             detailSection.style.display = 'block';
         } catch (err) {
-            alert('加载项目失败: ' + err);
+            showError('加载项目失败: ' + err);
         }
     }
 
@@ -162,7 +167,8 @@ App.registerPage('projects', function(container) {
 
     document.getElementById('rerun-btn').addEventListener('click', () => {
         if (!currentProjectId) return;
-        App.pageParams = { projectId: currentProjectId };
+        const projectName = document.getElementById('detail-name').textContent || '';
+        App.pageParams = { projectId: currentProjectId, projectName: projectName };
         window.location.hash = 'batch';
     });
 
@@ -185,11 +191,12 @@ App.registerPage('projects', function(container) {
         if (!currentProjectId) return;
         const inputDir = document.getElementById('rerun-input-dir').value.trim();
         const outputDir = document.getElementById('rerun-output-dir').value.trim();
-        if (!inputDir || !outputDir) { alert('请选择输入和输出目录'); return; }
+        const outputName = document.getElementById('rerun-output-name').value.trim();
+        if (!inputDir || !outputDir) { showAlert('请选择输入和输出目录'); return; }
 
         const msgEl = document.getElementById('detail-message');
         try {
-            await window.go.main.App.RerunProject(currentProjectId, inputDir, outputDir);
+            await window.go.main.App.RerunProject(currentProjectId, inputDir, outputDir, outputName);
             msgEl.innerHTML = '<div class="alert alert-success">批处理已启动，请前往「批量处理」页面查看进度</div>';
         } catch (err) {
             msgEl.innerHTML = '<div class="alert alert-error">' + escapeHtml(String(err)) + '</div>';
@@ -198,7 +205,8 @@ App.registerPage('projects', function(container) {
 
     document.getElementById('delete-btn').addEventListener('click', async () => {
         if (!currentProjectId) return;
-        if (!confirm('确定要删除此项目吗？')) return;
+        const confirm_result = await showConfirm('确定要删除此项目吗？');
+        if (!confirm_result) return;
 
         try {
             await window.go.main.App.DeleteProject(currentProjectId);
@@ -207,7 +215,7 @@ App.registerPage('projects', function(container) {
             listSection.style.display = 'block';
             loadProjects();
         } catch (err) {
-            alert('删除失败: ' + err);
+            showError('删除失败: ' + err);
         }
     });
 

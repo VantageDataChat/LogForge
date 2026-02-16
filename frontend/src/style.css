@@ -916,3 +916,96 @@ textarea {
     outline: none;
     border-color: var(--primary);
 }
+
+/* ============================================
+   Custom Dialog (replaces native alert/confirm)
+   ============================================ */
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: wizardFadeIn 0.2s ease-out;
+}
+
+.dialog-overlay.dialog-fade-out {
+    animation: wizardFadeOut 0.2s ease-in forwards;
+}
+
+.dialog-box {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    width: 400px;
+    max-width: 88vw;
+    overflow: hidden;
+    animation: wizardSlideUp 0.25s ease-out;
+}
+
+.dialog-body {
+    padding: 28px 28px 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.dialog-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.dialog-icon.dialog-icon-warning {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+}
+
+.dialog-icon.dialog-icon-error {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+}
+
+.dialog-icon.dialog-icon-info {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+}
+
+.dialog-icon.dialog-icon-confirm {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+}
+
+.dialog-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.dialog-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.dialog-message {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.dialog-footer {
+    padding: 14px 28px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}

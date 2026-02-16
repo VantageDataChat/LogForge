@@ -73,20 +73,20 @@ App.registerPage('sample', function(container) {
                 projectNameInput.value = result.project_name;
             }
         } catch (err) {
-            alert('浏览日志文件失败: ' + String(err));
+            showError('浏览日志文件失败: ' + String(err));
         }
     });
 
     analyzeBtn.addEventListener('click', async () => {
         const name = projectNameInput.value.trim();
         if (!name) {
-            alert('请输入项目名称');
+            showAlert('请输入项目名称');
             return;
         }
 
         const text = sampleInput.value.trim();
         if (!text) {
-            alert('请输入样本日志内容');
+            showAlert('请输入样本日志内容');
             return;
         }
 
