@@ -64,7 +64,11 @@ const App = {
             page = 'sample';
         }
 
-        this.pageParams = params || null;
+        // Only update pageParams if params is explicitly provided,
+        // so hashchange-triggered navigations don't clear pending params.
+        if (params !== undefined) {
+            this.pageParams = params;
+        }
 
         document.querySelectorAll('.nav-item').forEach(link => {
             link.classList.toggle('active', link.dataset.page === page);

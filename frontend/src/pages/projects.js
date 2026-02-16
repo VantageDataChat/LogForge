@@ -162,8 +162,8 @@ App.registerPage('projects', function(container) {
 
     document.getElementById('rerun-btn').addEventListener('click', () => {
         if (!currentProjectId) return;
-        window.location.hash = 'batch';
         App.navigate('batch', { projectId: currentProjectId });
+        window.location.hash = 'batch';
     });
 
     // Directory browse for rerun
