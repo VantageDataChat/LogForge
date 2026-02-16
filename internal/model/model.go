@@ -16,6 +16,8 @@ type Settings struct {
 	UvPath           string    `json:"uv_path"`
 	DefaultInputDir  string    `json:"default_input_dir"`
 	DefaultOutputDir string    `json:"default_output_dir"`
+	SampleLines      int       `json:"sample_lines,omitempty"`
+	SampleLines      int       `json:"sample_lines,omitempty"`
 	ShowWizard       *bool     `json:"show_wizard,omitempty"`
 }
 
@@ -64,6 +66,13 @@ type BatchProgress struct {
 	Processed   int     `json:"processed"`
 	Failed      int     `json:"failed"`
 	Message     string  `json:"message"`
+}
+
+// LogFileSample holds the result of browsing a log file for sample lines.
+type LogFileSample struct {
+	FileName    string `json:"file_name"`    // full file name with extension
+	ProjectName string `json:"project_name"` // file name without extension
+	SampleText  string `json:"sample_text"`  // first N lines
 }
 
 // Message represents a single message in an LLM conversation.

@@ -42,6 +42,22 @@ export namespace model {
 	        this.errors = source["errors"];
 	    }
 	}
+	export class LogFileSample {
+	    file_name: string;
+	    project_name: string;
+	    sample_text: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new LogFileSample(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.file_name = source["file_name"];
+	        this.project_name = source["project_name"];
+	        this.sample_text = source["sample_text"];
+	    }
+	}
 	export class LLMConfig {
 	    base_url: string;
 	    api_key: string;
@@ -107,6 +123,7 @@ export namespace model {
 	    uv_path: string;
 	    default_input_dir: string;
 	    default_output_dir: string;
+	    sample_lines?: number;
 	    show_wizard?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -119,6 +136,7 @@ export namespace model {
 	        this.uv_path = source["uv_path"];
 	        this.default_input_dir = source["default_input_dir"];
 	        this.default_output_dir = source["default_output_dir"];
+	        this.sample_lines = source["sample_lines"];
 	        this.show_wizard = source["show_wizard"];
 	    }
 	

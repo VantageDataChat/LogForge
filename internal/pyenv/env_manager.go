@@ -44,6 +44,7 @@ func (pem *PythonEnvManager) EnsureEnv(ctx context.Context) error {
 	// 2. Create virtual environment if it doesn't exist
 	if _, err := os.Stat(pem.envPath); os.IsNotExist(err) {
 		cmd := exec.CommandContext(ctx, pem.uvPath, "venv", pem.envPath)
+		hideWindow(cmd)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("failed to create virtual environment: %w\n%s", err, string(output))
@@ -52,6 +53,7 @@ func (pem *PythonEnvManager) EnsureEnv(ctx context.Context) error {
 
 	// 3. Install dependencies
 	cmd := exec.CommandContext(ctx, pem.uvPath, "pip", "install", "openpyxl", "--python", pem.pythonPath())
+	hideWindow(cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to install dependencies: %w\n%s", err, string(output))
@@ -69,6 +71,7 @@ func (pem *PythonEnvManager) RunScript(ctx context.Context, scriptPath string, a
 	cmdArgs = append(cmdArgs, scriptPath)
 	cmdArgs = append(cmdArgs, args...)
 	cmd := exec.CommandContext(ctx, pythonBin, cmdArgs...)
+	hideWindow(cmd)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -104,6 +107,7 @@ func (pem *PythonEnvManager) GetStatus() *EnvStatus {
 // checkUv verifies that the uv tool is available by running `uv --version`.
 func (pem *PythonEnvManager) checkUv(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, pem.uvPath, "--version")
+	hideWindow(cmd)
 	return cmd.Run()
 }
 

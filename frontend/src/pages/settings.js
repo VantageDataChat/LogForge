@@ -60,6 +60,10 @@ App.registerPage('settings', function(container) {
                 <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 其他
             </div>
+            <div class="form-group">
+                <label for="sample-lines">采样条数（浏览日志文件时取前几行作为样本）</label>
+                <input type="number" id="sample-lines" min="1" max="1000" placeholder="默认 20">
+            </div>
             <label class="wizard-checkbox" style="margin-bottom:0">
                 <input type="checkbox" id="show-wizard-toggle">
                 <span>启动时显示使用向导</span>
@@ -73,6 +77,7 @@ App.registerPage('settings', function(container) {
         model: document.getElementById('llm-model'),
         inputDir: document.getElementById('default-input-dir'),
         outputDir: document.getElementById('default-output-dir'),
+        sampleLines: document.getElementById('sample-lines'),
     };
     const msgEl = document.getElementById('settings-message');
     const testResultEl = document.getElementById('llm-test-result');
@@ -91,6 +96,7 @@ App.registerPage('settings', function(container) {
             fields.model.value = s.llm.model_name || '';
             fields.inputDir.value = s.default_input_dir || '';
             fields.outputDir.value = s.default_output_dir || '';
+            fields.sampleLines.value = s.sample_lines || 20;
         } catch (err) {
             msgEl.innerHTML = '<div class="alert alert-error">加载设置失败: ' + escapeHtml(String(err)) + '</div>';
         }
@@ -118,6 +124,7 @@ App.registerPage('settings', function(container) {
             uv_path: (loadedSettings && loadedSettings.uv_path) ? loadedSettings.uv_path : 'uv',
             default_input_dir: fields.inputDir.value.trim(),
             default_output_dir: fields.outputDir.value.trim(),
+            sample_lines: parseInt(fields.sampleLines.value, 10) || 20,
         };
     }
 

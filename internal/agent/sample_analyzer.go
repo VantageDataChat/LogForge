@@ -51,11 +51,17 @@ The generated Python program MUST:
 1. Accept --input and --output command line arguments (--input is the directory containing log files, --output is the directory for Excel output)
 2. Traverse all log files in the input directory
 3. Parse each log entry into structured data based on the detected format
-4. Use openpyxl to merge ALL parsed data from ALL log files into a SINGLE Excel file (e.g. output/result.xlsx). Do NOT create one Excel per log file. All rows go into one worksheet so the user can process them together easily.
-5. Output progress to stdout as JSON lines, one per file processed, in this exact format:
+4. Use openpyxl to write ALL parsed data into a SINGLE Excel file (e.g. output/result.xlsx), but create a SEPARATE SHEET for each input log file. The sheet name MUST be the original log file name WITH extension (e.g. "Apache_2k.log"). If the file name exceeds 31 characters (Excel sheet name limit), truncate it to 31 characters. Do NOT use generic names like "Log Entries" or "Sheet1". Do NOT merge all data into one worksheet.
+   IMPORTANT: Each log file must produce exactly ONE sheet. Do NOT create duplicate sheets. When creating the Workbook, immediately remove the default empty sheet (wb.remove(wb.active)) before adding any data sheets. Ensure each file is only processed once.
+5. STRICTLY FORBIDDEN extra columns:
+   - Do NOT add a "source_file" column. The sheet name already identifies the source file.
+   - Do NOT add a row number / line number / index / sequence column.
+   - Do NOT add a "raw_log" / "raw_line" / "original" / "raw" column containing the original log line text.
+   - The Excel output must ONLY contain the parsed/structured data fields (e.g. datetime, level, module, pid, message). No redundant or auxiliary columns.
+6. For date/time fields: if the log contains date and time information that appears on multiple lines (e.g. a date header followed by time-only entries), consolidate them so each row has ONE complete datetime or date column. Do NOT repeat the same date across a separate column. Keep only one unified date/time column per row to make statistical analysis easier.
+7. Output progress to stdout as JSON lines, one per file processed, in this exact format:
    {"file": "<filename>", "progress": <0.0-1.0>, "total": <total_files>, "current": <current_index>}
-6. Include complete error handling (try/except around file operations, graceful handling of unparseable entries)
-7. Add a "source_file" column so the user knows which log file each row came from
+8. Include complete error handling (try/except around file operations, graceful handling of unparseable entries)
 
 Return the complete Python code inside a single python code block.`
 

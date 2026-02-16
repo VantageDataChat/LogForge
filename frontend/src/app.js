@@ -59,10 +59,12 @@ const App = {
         this.navigate(hash);
     },
 
-    navigate(page) {
+    navigate(page, params) {
         if (!this.pages[page]) {
             page = 'sample';
         }
+
+        this.pageParams = params || null;
 
         document.querySelectorAll('.nav-item').forEach(link => {
             link.classList.toggle('active', link.dataset.page === page);

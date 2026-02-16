@@ -6,6 +6,10 @@ export function AnalyzeSample(arg1, arg2) {
   return window['go']['main']['App']['AnalyzeSample'](arg1, arg2);
 }
 
+export function BrowseLogFile() {
+  return window['go']['main']['App']['BrowseLogFile']();
+}
+
 export function DeleteProject(arg1) {
   return window['go']['main']['App']['DeleteProject'](arg1);
 }
@@ -44,6 +48,10 @@ export function IsLLMConfigured() {
 
 export function ListProjects() {
   return window['go']['main']['App']['ListProjects']();
+}
+
+export function OpenDirectory(arg1) {
+  return window['go']['main']['App']['OpenDirectory'](arg1);
 }
 
 export function RerunProject(arg1, arg2, arg3) {

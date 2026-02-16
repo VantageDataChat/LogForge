@@ -6,7 +6,7 @@ require (
 	github.com/cloudwego/eino v0.7.32
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.8
 	github.com/google/uuid v1.6.0
-	github.com/wailsapp/wails/v2 v2.9.2
+	github.com/wailsapp/wails/v2 v2.11.0
 	pgregory.net/rapid v1.2.0
 )
 

@@ -161,8 +161,9 @@ App.registerPage('projects', function(container) {
     });
 
     document.getElementById('rerun-btn').addEventListener('click', () => {
-        const rerunSection = document.getElementById('rerun-section');
-        rerunSection.style.display = rerunSection.style.display === 'none' ? 'block' : 'none';
+        if (!currentProjectId) return;
+        window.location.hash = 'batch';
+        App.navigate('batch', { projectId: currentProjectId });
     });
 
     // Directory browse for rerun

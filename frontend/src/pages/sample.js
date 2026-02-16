@@ -3,7 +3,7 @@
 App.registerPage('sample', function(container) {
     container.innerHTML = `
         <h2 class="page-header">样本分析</h2>
-        <p class="page-desc">粘贴少量日志样本，AI 将自动分析格式并生成 Python 处理程序</p>
+        <p class="page-desc">粘贴少量日志样本，或浏览日志文件取前几行作为样本，AI 将自动分析格式并生成 Python 处理程序</p>
         <div class="card">
             <div class="card-title">
                 <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -14,13 +14,19 @@ App.registerPage('sample', function(container) {
                 <input type="text" id="project-name" placeholder="为本次分析命名，例如: nginx访问日志">
             </div>
             <div class="form-group">
-                <label for="sample-input">粘贴几条样本日志条目，系统将分析格式并生成处理程序</label>
+                <label for="sample-input">粘贴几条样本日志条目，或点击下方按钮从日志文件中提取</label>
                 <textarea id="sample-input" rows="10" placeholder="在此粘贴样本日志内容...&#10;&#10;例如:&#10;2024-01-15 10:23:45 INFO [nginx] 192.168.1.100 GET /api/users 200 0.032s"></textarea>
             </div>
-            <button id="analyze-btn" class="btn btn-primary">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                开始分析
-            </button>
+            <div class="btn-group">
+                <button id="browse-log-btn" class="btn btn-default">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    浏览日志文件
+                </button>
+                <button id="analyze-btn" class="btn btn-primary">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    开始分析
+                </button>
+            </div>
         </div>
         <div id="sample-loading" style="display:none;">
             <div class="card">
@@ -47,6 +53,7 @@ App.registerPage('sample', function(container) {
     `;
 
     const analyzeBtn = document.getElementById('analyze-btn');
+    const browseLogBtn = document.getElementById('browse-log-btn');
     const projectNameInput = document.getElementById('project-name');
     const sampleInput = document.getElementById('sample-input');
     const resultDiv = document.getElementById('sample-result');
@@ -55,6 +62,20 @@ App.registerPage('sample', function(container) {
     const statusEl = document.getElementById('validation-status');
     const errorsEl = document.getElementById('sample-errors');
     const projectIdEl = document.getElementById('project-id-display');
+
+    // Browse log file — read first N lines as sample, auto-fill project name
+    browseLogBtn.addEventListener('click', async () => {
+        try {
+            const result = await window.go.main.App.BrowseLogFile();
+            if (!result) return; // user cancelled
+            sampleInput.value = result.sample_text;
+            if (!projectNameInput.value.trim()) {
+                projectNameInput.value = result.project_name;
+            }
+        } catch (err) {
+            alert('浏览日志文件失败: ' + String(err));
+        }
+    });
 
     analyzeBtn.addEventListener('click', async () => {
         const name = projectNameInput.value.trim();

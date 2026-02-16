@@ -90,6 +90,11 @@ App.registerPage('batch', function(container) {
                     projectSelect.innerHTML += '<option value="' + p.id + '">' + escapeHtml(label) + '</option>';
                 });
             }
+            // Auto-select project if navigated from project management
+            if (App.pageParams && App.pageParams.projectId) {
+                projectSelect.value = App.pageParams.projectId;
+                App.pageParams = null;
+            }
         } catch (_) {
             projectSelect.innerHTML = '<option value="">加载项目失败</option>';
         }
@@ -221,11 +226,26 @@ App.registerPage('batch', function(container) {
 
         if (p.status === 'completed') {
             html += '<div class="alert alert-success">批量处理完成</div>';
+            html += '<button class="btn btn-primary btn-sm" id="open-output-dir-btn" style="margin-top:8px;">'
+                + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;">'
+                + '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                + '打开输出目录</button>';
         } else if (p.status === 'failed') {
             html += '<div class="alert alert-error">批量处理失败' + (p.message ? ': ' + escapeHtml(p.message) : '') + '</div>';
         }
 
         resultContent.innerHTML = html;
+
+        const openBtn = document.getElementById('open-output-dir-btn');
+        if (openBtn) {
+            openBtn.addEventListener('click', async () => {
+                try {
+                    await window.go.main.App.OpenDirectory(outputDirInput.value.trim());
+                } catch (err) {
+                    alert('打开目录失败: ' + err);
+                }
+            });
+        }
     }
 
     function appendLog(msg) {

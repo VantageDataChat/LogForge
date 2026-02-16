@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -267,6 +269,60 @@ func (a *App) RerunProject(id string, inputDir string, outputDir string) error {
 	return a.RunBatch(id, inputDir, outputDir)
 }
 
+// BrowseLogFile opens a file picker for log files, reads the first N lines
+// (configured by SampleLines setting, default 20), and returns the sample text
+// along with a project name derived from the file name (without extension).
+func (a *App) BrowseLogFile() (*model.LogFileSample, error) {
+	filePath, err := wailsRuntime.OpenFileDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: "选择日志文件",
+		Filters: []wailsRuntime.FileFilter{
+			{DisplayName: "日志文件", Pattern: "*.log;*.txt;*.csv;*.json;*.xml"},
+			{DisplayName: "所有文件", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if filePath == "" {
+		return nil, nil // user cancelled
+	}
+
+	// Determine sample lines from settings
+	sampleLines := 20
+	if settings, err := a.settingsManager.Load(); err == nil && settings.SampleLines > 0 {
+		sampleLines = settings.SampleLines
+	}
+
+	// Read first N lines
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("无法打开文件: %w", err)
+	}
+	defer f.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+		if len(lines) >= sampleLines {
+			break
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("读取文件失败: %w", err)
+	}
+
+	baseName := filepath.Base(filePath)
+	ext := filepath.Ext(baseName)
+	projectName := strings.TrimSuffix(baseName, ext)
+
+	return &model.LogFileSample{
+		FileName:    baseName,
+		ProjectName: projectName,
+		SampleText:  strings.Join(lines, "\n"),
+	}, nil
+}
+
 // SelectDirectory opens a native directory picker dialog and returns the selected path.
 func (a *App) SelectDirectory(title string) (string, error) {
 	if title == "" {
@@ -279,6 +335,18 @@ func (a *App) SelectDirectory(title string) (string, error) {
 		return "", err
 	}
 	return dir, nil
+}
+
+// OpenDirectory opens the given directory in the system file explorer.
+func (a *App) OpenDirectory(dir string) error {
+	if dir == "" {
+		return fmt.Errorf("directory path must not be empty")
+	}
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return fmt.Errorf("invalid directory path: %w", err)
+	}
+	return openFileExplorer(absDir)
 }
 
 // GetSettings returns the current application settings.

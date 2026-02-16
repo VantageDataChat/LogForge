@@ -5,6 +5,8 @@ import {pyenv} from '../models';
 
 export function AnalyzeSample(arg1:string,arg2:string):Promise<model.GenerateResult>;
 
+export function BrowseLogFile():Promise<model.LogFileSample>;
+
 export function DeleteProject(arg1:string):Promise<void>;
 
 export function EnsurePythonEnv():Promise<void>;
@@ -24,6 +26,8 @@ export function GetShowWizard():Promise<boolean>;
 export function IsLLMConfigured():Promise<boolean>;
 
 export function ListProjects():Promise<Array<model.Project>>;
+
+export function OpenDirectory(arg1:string):Promise<void>;
 
 export function RerunProject(arg1:string,arg2:string,arg3:string):Promise<void>;
 

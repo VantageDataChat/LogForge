@@ -32,6 +32,7 @@ func defaultSettings() model.Settings {
 		UvPath:           "uv",
 		DefaultInputDir:  "",
 		DefaultOutputDir: "",
+		SampleLines:      20,
 		ShowWizard:       &showWizard,
 	}
 }
