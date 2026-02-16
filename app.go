@@ -265,8 +265,8 @@ func (a *App) DeleteProject(id string) error {
 }
 
 // RerunProject starts batch processing using an existing project's code.
-func (a *App) RerunProject(id string, inputDir string, outputDir string) error {
-	return a.RunBatch(id, inputDir, outputDir)
+func (a *App) RerunProject(id string, inputDir string, outputDir string, outputFileName string) error {
+	return a.RunBatch(id, inputDir, outputDir, outputFileName)
 }
 
 // BrowseLogFile opens a file picker for log files, reads the first N lines
